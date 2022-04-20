@@ -208,18 +208,25 @@ const TinderCard = React.forwardRef(({ flickOnSwipe = true, children, onSwipe, o
     let mouseIsClicked = false
     let swipeThresholdFulfilledDirection = 'none'
 
-    element.current.addEventListener(('touchstart'), (ev) => {
+    const onTouchStart = (ev) => {
       ev.preventDefault()
       handleSwipeStart()
       offset = { x: -touchCoordinatesFromEvent(ev).x, y: -touchCoordinatesFromEvent(ev).y }
-    })
+    }
 
-    element.current.addEventListener(('mousedown'), (ev) => {
-      ev.preventDefault()
-      mouseIsClicked = true
-      handleSwipeStart()
-      offset = { x: -mouseCoordinatesFromEvent(ev).x, y: -mouseCoordinatesFromEvent(ev).y }
-    })
+    element.current.addEventListener(('touchstart'), onTouchStart)
+
+    const onMouseDown = (ev) => {
+      ev.preventDefault();
+      mouseIsClicked = true;
+      handleSwipeStart();
+      offset = {
+        x: -mouseCoordinatesFromEvent(ev).x,
+        y: -mouseCoordinatesFromEvent(ev).y,
+      };
+    };
+
+    element.current.addEventListener(('mousedown'), onMouseDown)
 
     const handleMove = (coordinates) => {
       // Check fulfillment
@@ -241,39 +248,59 @@ const TinderCard = React.forwardRef(({ flickOnSwipe = true, children, onSwipe, o
       lastLocation = newLocation
     }
 
-    element.current.addEventListener(('touchmove'), (ev) => {
+    const onTouchMove = (ev) => {
       ev.preventDefault()
       handleMove(touchCoordinatesFromEvent(ev))
-    })
+    }
 
-    element.current.addEventListener(('mousemove'), (ev) => {
-      ev.preventDefault()
+    element.current.addEventListener(('touchmove'), onTouchMove)
+
+    const onMouseMove = (ev) => {
+      ev.preventDefault();
       if (mouseIsClicked) {
-        handleMove(mouseCoordinatesFromEvent(ev))
+        handleMove(mouseCoordinatesFromEvent(ev));
       }
-    })
+    };
 
-    element.current.addEventListener(('touchend'), (ev) => {
-      ev.preventDefault()
-      handleSwipeReleased(element.current, speed)
-    })
+    element.current.addEventListener(('mousemove'), onMouseMove)
 
-    element.current.addEventListener(('mouseup'), (ev) => {
+    const onTouchEnd = (ev) => {
+      ev.preventDefault();
+      handleSwipeReleased(element.current, speed);
+    };
+
+    element.current.addEventListener(('touchend'), onTouchEnd)
+
+    const onMouseUp = (ev) => {
       if (mouseIsClicked) {
-        ev.preventDefault()
-        mouseIsClicked = false
-        handleSwipeReleased(element.current, speed)
+        ev.preventDefault();
+        mouseIsClicked = false;
+        handleSwipeReleased(element.current, speed);
       }
-    })
+    };
 
-    element.current.addEventListener(('mouseleave'), (ev) => {
+    element.current.addEventListener(('mouseup'), onMouseUp)
+
+    const onMouseLeave = (ev) => {
       if (mouseIsClicked) {
-        ev.preventDefault()
-        mouseIsClicked = false
-        handleSwipeReleased(element.current, speed)
+        ev.preventDefault();
+        mouseIsClicked = false;
+        handleSwipeReleased(element.current, speed);
       }
-    })
-  }, []) // TODO fix so swipeRequirementType can be changed on the fly. Pass as dependency cleanup eventlisteners and update new eventlisteners.
+    };
+
+    element.current.addEventListener(('mouseleave'), onMouseLeave)
+
+    return () => {
+      element.current.removeEventListener(('touchstart'), onTouchStart)
+      element.current.removeEventListener(('touchmove'), onTouchMove)
+      element.current.removeEventListener(('touchend'), onTouchEnd)
+      element.current.removeEventListener(('mousedown'), onMouseDown)
+      element.current.removeEventListener(('mousemove'), onMouseMove)
+      element.current.removeEventListener(('mouseup'), onMouseUp)
+      element.current.removeEventListener(('mouseleave'), onMouseLeave)
+    }
+  }, [handleSwipeReleased])  // TODO fix so swipeRequirementType can be changed on the fly. Pass as dependency cleanup eventlisteners and update new eventlisteners.
 
   return (
     React.createElement('div', { ref: element, className }, children)
